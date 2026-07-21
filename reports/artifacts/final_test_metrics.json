@@ -1,0 +1,23 @@
+{
+  "lr_woe": {
+    "roc_auc": 0.8513512788844106,
+    "pr_auc": 0.386878710722595,
+    "ks": 0.547829123387281,
+    "brier": 0.04985512741855765,
+    "n": 30000,
+    "event_rate": 0.06683333333333333,
+    "chosen_C": 0.1
+  },
+  "lgbm_mono": {
+    "roc_auc": 0.859488855998956,
+    "pr_auc": 0.40469457444454693,
+    "ks": 0.5691634460909701,
+    "brier": 0.048841177807367964,
+    "n": 30000,
+    "event_rate": 0.06683333333333333,
+    "chosen_num_leaves": 31,
+    "chosen_min_child_samples": 100,
+    "chosen_n_estimators": 126
+  },
+  "note": "RISK-TEST evaluated on the primary spec only; see DESIGN_FREEZE.md amendment log for the one documented re-evaluation (WOE binning bug fix)"
+}

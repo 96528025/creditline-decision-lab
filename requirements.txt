@@ -1,0 +1,19 @@
+# Core stack (see README for why each is here; scope frozen — no extra model libraries)
+pandas>=2.2
+numpy>=1.26
+scikit-learn>=1.5
+lightgbm>=4.3          # chosen GBDT: native NaN handling + first-class monotone_constraints
+statsmodels>=0.14
+scipy>=1.13
+shap>=0.46
+econml>=0.15           # Layer 3 meta-learners (T-/X-learner)
+matplotlib>=3.8
+
+# Data access & notebooks tooling
+kagglehub>=0.3
+jupytext>=1.16
+nbclient>=0.10
+ipykernel>=6.29
+pyarrow>=16
+pytest>=8
+nbconvert>=7

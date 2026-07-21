@@ -1,0 +1,13 @@
+# Raw data is never committed (see data/download.md and DESIGN_FREEZE.md §1)
+data/raw/
+data/*.db
+data/*.sqlite
+
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+
+# Claude Code local settings (machine-specific permission paths)
+.claude/
