@@ -1,0 +1,49 @@
+{
+  "policy": "tau_spend_positive",
+  "spec": {
+    "tau_s_min": 0.0
+  },
+  "selection_rule": "among candidates with one-sided 95% UB of incremental default per eligible < delta_pp, choose max incremental spend per eligible on POLICY-VAL",
+  "test_decision_rule": "evaluate the frozen policy exactly once on POLICY-TEST: per-eligible incremental spend with 95% CI and incremental default with one-sided 95% Newcombe UB; feasible iff UB < delta_pp; decisions compared to DGP truth (simulation privilege)",
+  "delta_pp": 0.5,
+  "model_hashes": {
+    "spend": {
+      "mu1": "ae8455fc91470aba763ba5c35a4d0a14948ed116ef61fa1bb56fb4631dd7d6ce",
+      "mu0": "1e25d9052c5061e55bb26c604b383d5c6b585741f789dac8d78f511cd5021447",
+      "tau1": "c2f7b7d1adec68912e73720ad6a3ee938e5be519a8aab701595a6d3aacaecb1c",
+      "tau0": "5fd1b9b7cd09658c5530a917b0fb47e6647760154c226472deb1e6ca87cebd78"
+    },
+    "default": {
+      "mu1": "9d5b87e7e64bd3ab9b90dc9b9c995c512c971c817595e4da6b00d28ad6680005",
+      "mu0": "6d1d9ce436a0b1305cebeec94aa44d17e6e22717ceeb6fda0b31a9235852715c",
+      "tau1": "a882b0eadd61d211febb6a80fba47201c434d90144cd4b15f4e46e15e9870090",
+      "tau0": "1f14d4a0bc0af250aa39a3708ac7ea8e4f13c7056f0f24d5c50b0df3228ca5f3"
+    }
+  },
+  "candidate_table_sha256": "7c4d01bf70e72c2cc1eea4b83e75ff312d3d54296f4d6b0e2674aee87d9afbe3",
+  "outcome_marker_sha256": "b3419f4aadf1e0de9aca695bd85e1e57f1cadcd54d8d17f75cb8443e53f69775",
+  "linkage_manifest_sha256": "30360ece731b0ac2ad1c1996cfd51f26ed7d9552173944de80265b439a77e7ae",
+  "train_ids_sha256": "712ff5131c000e33fc692eed8bb9bb0ff21a5f88249adbb15307d2b8d0f31aa7",
+  "val_ids_sha256": "4272fdb9e81c59b34f53a09d7cf3d05bf7f8ce4453e618532ec89af5db86f56a",
+  "test_ids_sha256": "53b16040e76652f2898106209061f5b9d15b323de522e3e699a5f77b3e1997e7",
+  "feature_schema_sha256": "f2f2091af60891f56ea3214b8064d8d6e308f5543b801b16dce95b218f3b5c84",
+  "val_results": {
+    "share_targeted": 0.9820058684201223,
+    "n_targeted_t": 13892.0,
+    "n_targeted_c": 13886.0,
+    "inc_spend_per_eligible": 25.362578910722835,
+    "inc_spend_per_eligible_ci": [
+      18.460589828454907,
+      32.26456799299077
+    ],
+    "inc_default_pp_per_eligible": 0.2112197009433054,
+    "inc_default_pp_upper_bound": 0.4901502323234321,
+    "subgroup_spend_diff": 25.8273190887615,
+    "subgroup_default_diff_pp": 0.21509005978051984,
+    "feasible": 1.0
+  },
+  "frozen_on": "2026-07-21",
+  "amendments": [
+    "2026-07-21: migrated to executable freeze v2 (audit P1): persisted X-learner boosters + content hashes, loadable spec (finite-constraints encoding), input-state and candidate-table hashes, selection and test decision rules. Model identity with the v1 in-memory models proven by byte-identical candidate-table reproduction; TEST outcomes NOT re-evaluated (targeting counts verified from covariates + assignment only)."
+  ]
+}

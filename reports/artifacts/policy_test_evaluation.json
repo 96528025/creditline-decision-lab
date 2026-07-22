@@ -1,0 +1,32 @@
+{
+  "policy": "tau_spend_positive",
+  "policy_value_test": {
+    "share_targeted": 0.9812641402714932,
+    "n_targeted_t": 13888,
+    "n_targeted_c": 13870,
+    "inc_spend_per_eligible": 26.54439478314979,
+    "inc_spend_per_eligible_ci": [
+      19.539784829861286,
+      33.54900473643829
+    ],
+    "inc_default_pp_per_eligible": -0.0450707971292538,
+    "inc_default_pp_upper_bound": 0.23209630326369934,
+    "subgroup_spend_diff": 27.051222697087013,
+    "subgroup_default_diff_pp": -0.04593136065971365,
+    "feasible": true
+  },
+  "truth_validation": {
+    "true_inc_default_pp_per_eligible": 0.14870778535537116,
+    "true_inc_spend_per_eligible": 23.047169758860466,
+    "upper_bound_above_truth": true,
+    "true_below_delta": true,
+    "guardrail_decision_correct": true
+  },
+  "evaluated_on": "2026-07-21",
+  "policy_freeze_sha256": "a1320cd402a1050422246b06c871c9e2dde3cb9a6c1bdace7684311b30cb6118",
+  "test_ids_sha256": "53b16040e76652f2898106209061f5b9d15b323de522e3e699a5f77b3e1997e7",
+  "outcome_marker_sha256": "b3419f4aadf1e0de9aca695bd85e1e57f1cadcd54d8d17f75cb8443e53f69775",
+  "amendments": [
+    "2026-07-21: hash bindings added during freeze-v2 migration; all evaluation numbers unchanged, no re-prediction or outcome recomputation."
+  ]
+}
