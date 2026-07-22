@@ -1,0 +1,14 @@
+{
+  "generated_on": "2026-07-21",
+  "seed": 20260723,
+  "outcomes_sha256": "4e29b4fd5823489e59c2d64c73bb9fd1c11e4e04a6391bc7a0391ddd85591c8a",
+  "truth_sha256": "867bb6e4a2cb692e0d893b22ff13267dafa4e76393d641f67faa824c8ed91ec4",
+  "design_sha256": "0614c414aebe4b113c9e280139b212c631037a179bb8ee2796bc11afa26f9cba",
+  "linkage_manifest_sha256": "30360ece731b0ac2ad1c1996cfd51f26ed7d9552173944de80265b439a77e7ae",
+  "note": "cohort, split, eligibility, and design are IMMUTABLE from this point",
+  "amendments": [
+    "2026-07-21: truth artifact extended to potential-outcomes accounting (spend_y0/spend_y1/delta columns) after noticing the validation compared estimates against mean(tau) while the DGP also has a treated-activation channel and applies tau to inactive treated customers. Observed outcomes verified value-identical (outcomes sha256 unchanged); no design parameter changed. Known frozen DGP wart, unchanged: organic post-period activators share a single scalar lognormal draw.",
+    "2026-07-21: cate_truth.parquet added \u2014 analytic conditional expected effects E[Y(1)-Y(0)|X] for both outcomes (audit round 2: the realized contrast delta_spend_true is not a valid PEHE reference). Derived entirely from the frozen DGP + pre-treatment covariates; observed outcomes untouched."
+  ],
+  "cate_truth_sha256": "8ecd2334881533e31c2ff0d0404d26b6314c8aa896dc57ffbdfad4bc6b70aeca"
+}

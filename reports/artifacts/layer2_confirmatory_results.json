@@ -1,0 +1,81 @@
+{
+  "population": "policy_train \u222a policy_val (POLICY-TEST untouched)",
+  "spend_plain": {
+    "diff": 23.882885456834714,
+    "se": 2.250808108400277,
+    "ci_lo": 19.471301564370172,
+    "ci_hi": 28.294469349299256,
+    "rel_lift": 0.10285179010460659,
+    "n_t": 33001,
+    "n_c": 33002,
+    "boot_ci": [
+      19.45833591202726,
+      28.34309961416572
+    ]
+  },
+  "spend_winsorized_p99": {
+    "diff": 22.6647158273214,
+    "se": 1.9789619063969357,
+    "ci_lo": 18.785950490783407,
+    "ci_hi": 26.543481163859397,
+    "rel_lift": 0.09962021758200283,
+    "n_t": 33001,
+    "n_c": 33002
+  },
+  "spend_hurdle": {
+    "p_active_t": 0.9946365261658737,
+    "p_active_c": 0.8539482455608751,
+    "p_active_diff": 0.1406882806049986,
+    "p_active_se": 0.001985154191595441,
+    "intensity_t": 257.47062633640314,
+    "intensity_c": 271.921401699986,
+    "intensity_diff": -14.450775363582864
+  },
+  "spend_cuped": {
+    "diff": 25.209842135806895,
+    "se": 1.0029436367698898,
+    "ci_lo": 23.244072607737913,
+    "ci_hi": 27.175611663875877,
+    "rel_lift": 0.10887742490090518,
+    "n_t": 33001,
+    "n_c": 33002,
+    "boot_ci": [
+      23.269115793123127,
+      27.171037217161373
+    ],
+    "var_reduction": 0.7998879119911473
+  },
+  "spend_ancova_hc3_crosscheck": {
+    "diff": 25.210007823404744,
+    "se_hc3": 1.003615641278238,
+    "ci_lo": 23.242957312178326,
+    "ci_hi": 27.177058334631162
+  },
+  "guardrail": [
+    {
+      "delta_pp": 0.3,
+      "observed_diff_pp": 0.13036225332983992,
+      "one_sided_95_upper_pp": 0.3163160512818725,
+      "noninferiority": "NOT DEMONSTRATED",
+      "power_adequate": false
+    },
+    {
+      "delta_pp": 0.5,
+      "observed_diff_pp": 0.13036225332983992,
+      "one_sided_95_upper_pp": 0.3163160512818725,
+      "noninferiority": "DEMONSTRATED",
+      "power_adequate": true
+    },
+    {
+      "delta_pp": 0.75,
+      "observed_diff_pp": 0.13036225332983992,
+      "one_sided_95_upper_pp": 0.3163160512818725,
+      "noninferiority": "DEMONSTRATED",
+      "power_adequate": true
+    }
+  ],
+  "decision_rule": "SHIP only if BOTH hold on POLICY-TRAIN \u222a POLICY-VAL: (1) CUPED-adjusted spend lift point estimate >= spend_mde_dollars AND its 95% bootstrap CI lower bound > 0; (2) default non-inferiority PASSES at delta_noninf_pp via the one-sided 95% Newcombe upper bound. Otherwise DO NOT SHIP at the ATE level (Layer 3 may still identify a feasible targeted segment policy).",
+  "spend_condition_met": true,
+  "guardrail_condition_met": true,
+  "ATE_decision": "SHIP"
+}

@@ -1,0 +1,38 @@
+{
+  "planning_control_default_rate": 0.02130638130892662,
+  "planning_note": "HISTORICAL 2-year default rate of the frozen eligible cohort, used as a pre-treatment PLANNING PROXY for the control arm. It is not an observed control outcome; no simulated outcome existed when this was frozen.",
+  "n_eligible": 94291,
+  "dgp_params": {
+    "spend_pre_p_active": 0.85,
+    "spend_pre_mu": 5.2,
+    "spend_pre_sigma": 0.8,
+    "spend_pre_income_coef": 0.3,
+    "spend_post_noise_sd": 0.35,
+    "spend_post_p_activate": 0.02,
+    "tau_spend_slope": 40.0,
+    "tau_spend_intercept": -8.0,
+    "tau_spend_treated_activation": 0.03,
+    "tau_default_cap": 0.01,
+    "tau_default_power": 1.5,
+    "delta_noninf_pp": 0.5,
+    "delta_sensitivity_pp": [
+      0.3,
+      0.5,
+      0.75
+    ],
+    "spend_mde_dollars": 12.0,
+    "alpha_one_sided": 0.05,
+    "alpha_superiority_two_sided": 0.05,
+    "power_target": 0.8,
+    "policy_split": [
+      0.4,
+      0.3,
+      0.3
+    ],
+    "seed_experiment": 20260723,
+    "decision_rule": "SHIP only if BOTH hold on POLICY-TRAIN \u222a POLICY-VAL: (1) CUPED-adjusted spend lift point estimate >= spend_mde_dollars AND its 95% bootstrap CI lower bound > 0; (2) default non-inferiority PASSES at delta_noninf_pp via the one-sided 95% Newcombe upper bound. Otherwise DO NOT SHIP at the ATE level (Layer 3 may still identify a feasible targeted segment policy)."
+  },
+  "dgp_params_sha256": "0614c414aebe4b113c9e280139b212c631037a179bb8ee2796bc11afa26f9cba",
+  "linkage_manifest_sha256": "30360ece731b0ac2ad1c1996cfd51f26ed7d9552173944de80265b439a77e7ae",
+  "frozen_on": "2026-07-21"
+}

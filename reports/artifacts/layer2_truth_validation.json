@@ -1,0 +1,16 @@
+{
+  "note": "possible ONLY because this is a simulation with known DGP",
+  "true_ATE_spend_expected": 23.186225558169138,
+  "true_SATE_spend_realized_contrast": 23.14056044066106,
+  "true_ATE_spend_tau_only": 22.171846247053693,
+  "est_ATE_spend_cuped": 25.209842135806895,
+  "est_ATE_spend_plain": 23.882885456834714,
+  "cuped_ci_covers_expected_ate": false,
+  "cuped_ci_covers_realized_sate": false,
+  "plain_ci_covers_expected_ate": true,
+  "true_incremental_default_pp": 0.15814918995008515,
+  "guardrail_upper_bound_pp": 0.3163160512818725,
+  "guardrail_bound_above_truth": true,
+  "true_effect_below_frozen_delta": true,
+  "guardrail_decision_correct_vs_truth": true
+}

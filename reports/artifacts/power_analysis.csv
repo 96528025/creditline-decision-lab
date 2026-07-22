@@ -1,0 +1,4 @@
+delta_pp,anticipated_true_diff_pp,n_per_arm_spend,n_per_arm_guardrail,n_per_arm_guardrail_zero_diff_scenario,n_per_arm_required,binding_constraint,n_per_arm_available,power_adequate
+0.3,0.15808136852748098,9480,128020,28650,128020,guardrail,33001,False
+0.5,0.15808136852748098,9480,22056,10314,22056,guardrail,33001,True
+0.75,0.15808136852748098,9480,7360,4584,9480,spend,33001,True
