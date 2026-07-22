@@ -1,0 +1,7 @@
+{
+  "e5_percentile": 0.8,
+  "e5_abs_pd_threshold": 0.09036544850498339,
+  "n_risk_dev": 120000,
+  "frozen_on": "2026-07-21",
+  "note": "frozen BEFORE any simulated outcome generation (DESIGN_FREEZE.md \u00a79)"
+}

@@ -1,0 +1,7 @@
+rule,newly_excluded,remaining
+start,0,120000
+E1 90+ DPD >= 1,6448,113552
+E2 60-89 DPD >= 1,3812,109740
+E3 30-59 DPD >= 2,3568,106172
+E4 sentinel rows,229,105943
+E5 calibrated PD > 0.0904 (p80),11652,94291

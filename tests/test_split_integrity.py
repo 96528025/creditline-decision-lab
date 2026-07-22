@@ -91,10 +91,20 @@ def test_dev_views_exclude_holdout_rows():
     assert set(ids) == {i + 1 for i in saved["dev"]}
 
 
+def _clean_dev():
+    """Governance tests fit on RISK-DEV only — fitting on the full file would
+    contradict the discipline these very tests exist to enforce."""
+    from src.splits import make_or_load_split
+
+    raw = data_prep.load_raw()
+    dev_idx, _ = make_or_load_split(raw)
+    return data_prep.CleaningRules("primary").fit_transform(raw.loc[dev_idx])
+
+
 def test_lr_feature_list_drops_duplicated_flags():
     from src.risk_models import WoeLogisticModel
 
-    df = data_prep.CleaningRules("primary").fit_transform(data_prep.load_raw()).head(20_000)
+    df = _clean_dev().head(20_000)
     y, X = df[config.TARGET], df.drop(columns=[config.TARGET])
     m = WoeLogisticModel(C=1.0).fit(X, y)
     fitted = set(m.woe.woe_maps_)
@@ -105,7 +115,7 @@ def test_lr_feature_list_drops_duplicated_flags():
 def test_scorecard_has_no_micro_bins():
     """Governance check on the real fitted scorecard: no WOE bin (except the
     explicitly allowed missing bins) may hold fewer than 100 training rows."""
-    df = data_prep.CleaningRules("primary").fit_transform(data_prep.load_raw())
+    df = _clean_dev()
     from src.risk_models import WoeLogisticModel
 
     m = WoeLogisticModel(C=1.0).fit(df.drop(columns=[config.TARGET]), df[config.TARGET])

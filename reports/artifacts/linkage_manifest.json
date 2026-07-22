@@ -1,0 +1,13 @@
+{
+  "raw_data_md5": "cce525a1d41f234f58d3bb52f3d2516b",
+  "split_sha256": "d9f69b70cd7aa06d16502f6297ba5e445724d2c199d21ed71fbf553087da9577",
+  "model_params_sha256": "a7978323cb59ed31ee640e438c5b3a2c2c204ecbc49bbd8b861e18468d76fdff",
+  "oof_parquet_sha256": "5b568c7764ffbcddb258360af39dbe5655c58954943580560afaf50dc0818081",
+  "oof_index_sha256": "82d6e950acced3432c4c7430e1ee474079f4324725bc7e0e3e77ab2c3d8a805d",
+  "oof_row_count": 120000,
+  "e5_percentile": 0.8,
+  "e5_abs_threshold": 0.09036544850498339,
+  "eligible_ids_sha256": "a1f4f2728c51aec7d7c6acfd5ba2f8ee49657a25af47a18475bfded7d630aa93",
+  "eligible_count": 94291,
+  "calibrator_type": "isotonic"
+}

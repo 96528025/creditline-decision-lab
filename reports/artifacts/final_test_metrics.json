@@ -19,5 +19,5 @@
     "chosen_min_child_samples": 100,
     "chosen_n_estimators": 126
   },
-  "note": "RISK-TEST evaluated on the primary spec only; see DESIGN_FREEZE.md amendment log for the one documented re-evaluation (WOE binning bug fix)"
+  "note": "RISK-TEST is a fixed secondary holdout diagnostic evaluated on the primary spec only; its full usage history is disclosed in the DESIGN_FREEZE.md amendment log. Primary generalization evidence is the nested outer CV on RISK-DEV."
 }

@@ -16,6 +16,12 @@ DB_PATH = ROOT / "data" / "creditline.db"
 FIGURES_DIR = ROOT / "reports" / "figures"
 ARTIFACTS_DIR = ROOT / "reports" / "artifacts"  # metrics tables, frozen thresholds
 
+# Fixed-name marker written by the Layer-2 outcome generator the moment
+# simulated outcomes exist. Any process that could mutate the cohort, split,
+# or linkage artifacts must refuse to run when this file is present
+# (explicit RuntimeError — never a bare `assert`, which `python -O` strips).
+OUTCOME_MARKER = ARTIFACTS_DIR / "EXPERIMENT_OUTCOMES_FROZEN.json"
+
 TARGET = "SeriousDlqin2yrs"
 
 # ---------------------------------------------------------------------------
@@ -30,7 +36,8 @@ SEED_BOOTSTRAP = 20260724    # inference resampling
 # ---------------------------------------------------------------------------
 # Sample-splitting plan (FROZEN — DESIGN_FREEZE.md §2)
 # ---------------------------------------------------------------------------
-RISK_TEST_FRACTION = 0.20    # S0: stratified by target; used exactly once
+RISK_TEST_FRACTION = 0.20    # S0: fixed secondary holdout diagnostic
+                             # (full usage history: DESIGN_FREEZE.md amendment log)
 N_OUTER_FOLDS = 5            # S1: outer cross-fitting folds on RISK-DEV
 N_INNER_FOLDS = 5            # §3: inner folds for tuning + cross-fitted calibration
 POLICY_SPLIT = (0.40, 0.30, 0.30)  # S3: policy-train / policy-val / policy-test

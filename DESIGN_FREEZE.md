@@ -67,7 +67,8 @@ cs-training.csv (~150,000 rows; all seeds fixed in src/config.py)
 
 Frozen decisions:
 - **RISK-TEST is excluded from the experiment layer.** Including it would not leak labels
-  into the risk model, but "the test set does one job" is the cleanest defensible position;
+  into the risk model, but keeping the experiment layer fully disjoint from the risk
+  holdout is the cleanest defensible position;
   the cost is a ~20% smaller eligible pool.
 - **Layer 2's confirmatory analysis uses POLICY-TRAIN ∪ POLICY-VAL only.** POLICY-TEST is
   invisible to every reported analysis until the single final policy evaluation.
@@ -98,7 +99,8 @@ OOF property by retraining with fold k excluded and checking predictions match.
 - **Calibrator = isotonic regression**, fit per step 5 above. Rationale: ~77k
   inner-training rows with a ~6.7% event rate are ample for a nonparametric fit;
   isotonic imposes no sigmoid shape on GBDT scores that are already near-calibrated,
-  and it preserves score ranking by construction.
+  and it is order-preserving — though it may introduce ties (tied calibrated scores
+  can slightly reduce AUC relative to the raw scores; observed and accepted).
 - **Model carried into Linkage = the monotonic LightGBM**, selected on RISK-DEV
   outer-CV performance (mean AUC 0.865 vs 0.856 for the scorecard) — NOT on
   RISK-TEST results.

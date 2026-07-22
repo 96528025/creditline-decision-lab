@@ -177,7 +177,7 @@ def main() -> None:
     stability.to_csv(_art("stability_outer_cv.csv"), index=False)
     oof.to_parquet(_art("oof_scores_uncalibrated.parquet"))
 
-    # ---- step 3: final models -> ONE evaluation on RISK-TEST
+    # ---- step 3: final models -> secondary holdout diagnostic on RISK-TEST
     print("final tuning on full RISK-DEV ...")
     best_C, lr_table = tune_lr(X_dev, y_dev)
     lgbm_params, lgbm_table = tune_lgbm(X_dev, y_dev)
@@ -191,13 +191,15 @@ def main() -> None:
     final = {
         "lr_woe": {**metrics.summarize(y_test, p_lr), "chosen_C": best_C},
         "lgbm_mono": {**metrics.summarize(y_test, p_gb), **{f"chosen_{k}": v for k, v in lgbm_params.items()}},
-        "note": "RISK-TEST evaluated on the primary spec only; see DESIGN_FREEZE.md "
-                "amendment log for the one documented re-evaluation (WOE binning bug fix)",
+        "note": "RISK-TEST is a fixed secondary holdout diagnostic evaluated on the "
+                "primary spec only; its full usage history is disclosed in the "
+                "DESIGN_FREEZE.md amendment log. Primary generalization evidence "
+                "is the nested outer CV on RISK-DEV.",
     }
     _art("final_test_metrics.json").write_text(json.dumps(final, indent=2))
 
     plots.roc_overlay(y_test, {"WOE + LR": p_lr, "monotonic LightGBM": p_gb},
-                      "roc_test.png", "ROC on RISK-TEST (single final evaluation)")
+                      "roc_test.png", "ROC on RISK-TEST (secondary holdout diagnostic)")
     cal = {m: metrics.calibration_table(y_test, p)
            for m, p in (("WOE + LR", p_lr), ("monotonic LightGBM", p_gb))}
     for m, t in cal.items():

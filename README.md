@@ -35,7 +35,9 @@ python3.13 -m venv .venv && .venv/bin/pip install -r requirements.txt
 # put cs-training.csv in data/raw/ (see data/download.md)
 .venv/bin/python -m src.load_db        # SQLite warehouse + SQL views
 .venv/bin/python -m src.run_layer1     # Layer 1: nested CV (primary evidence), holdout diagnostic, SHAP
-.venv/bin/python -m pytest tests/ -q
+.venv/bin/python -m src.run_linkage    # Linkage: calibrated OOF + frozen eligibility (manifest-verified)
+.venv/bin/python -m pytest tests/ -q   # fast suite (leakage, monotonicity, integrity, manifest)
+.venv/bin/python -m pytest -m slow -q  # full-data artifact-reproducibility tests (refits models)
 # notebooks: jupytext --to notebook --execute notebooks/01_eda.py notebooks/02_risk_model.py
 ```
 
