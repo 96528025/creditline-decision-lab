@@ -111,10 +111,73 @@ def test_real_freeze_is_executable_and_hash_consistent():
         XLearner.load(MODELS_DIR / outcome, frozen["model_hashes"][outcome])
 
 
+def test_verified_write_refuses_to_overwrite_on_mismatch(tmp_path):
+    """The frozen artifact must SURVIVE a disagreeing rerun — the error must
+    not be the only remaining evidence of what was frozen."""
+    path = tmp_path / "candidates.csv"
+    original = b"policy,value\ntreat_all,1.0\n"
+    sha = policy.write_artifact_verified(path, original, None, "table")
+    assert path.read_bytes() == original
+
+    changed = b"policy,value\ntreat_all,999.0\n"
+    with pytest.raises(RuntimeError, match="NOT overwritten"):
+        policy.write_artifact_verified(path, changed, sha, "table")
+    assert path.read_bytes() == original          # untouched
+
+    # identical content re-verifies and is a no-op
+    assert policy.write_artifact_verified(path, original, sha, "table") == sha
+
+
+@needs_freeze
+def test_test_result_content_hash_detects_edited_numbers():
+    """Binding the TEST artifact to freeze/marker/id hashes proves it was
+    produced under the right conditions; only a content hash proves the
+    numbers were not edited afterwards."""
+    from src.run_layer3 import marker_identity_sha, result_payload_sha
+
+    stored = json.loads(TEST_EVAL_PATH.read_text())
+    assert result_payload_sha(stored) == stored["result_sha256"]
+    anchor = json.loads(config.OUTCOME_MARKER.read_text())["policy_test_result_sha256"]
+    assert anchor == stored["result_sha256"], "marker anchor must match"
+
+    for path_keys, new_value in (
+        (("policy_value_test", "inc_spend_per_eligible"), 999.0),
+        (("policy_value_test", "inc_default_pp_upper_bound"), 0.001),
+        (("policy_value_test", "feasible"), False),
+        (("truth_validation", "guardrail_decision_correct"), False),
+        (("policy",), "treat_all"),
+    ):
+        tampered = json.loads(json.dumps(stored))
+        target = tampered
+        for k in path_keys[:-1]:
+            target = target[k]
+        target[path_keys[-1]] = new_value
+        assert result_payload_sha(tampered) != stored["result_sha256"], (
+            f"edit to {'.'.join(path_keys)} went undetected")
+
+
+@needs_freeze
+def test_marker_identity_hash_excludes_layer3_backreference():
+    """The marker anchors the TEST result hash while the TEST result records
+    the marker hash; the identity hash must break that circularity."""
+    from src.run_layer3 import LAYER3_MARKER_KEYS, marker_identity_sha
+
+    before = marker_identity_sha()
+    marker = json.loads(config.OUTCOME_MARKER.read_text())
+    assert set(LAYER3_MARKER_KEYS) & set(marker), "back-reference should exist"
+    # the experiment-identity fields are what the hash actually covers
+    payload = {k: v for k, v in marker.items() if k not in LAYER3_MARKER_KEYS}
+    assert {"outcomes_sha256", "truth_sha256", "design_sha256"} <= set(payload)
+    assert before == marker_identity_sha()        # stable across reads
+
+
 @needs_freeze
 def test_real_test_artifact_bound_to_freeze():
-    frozen_sha = manifest.file_sha256(POLICY_FREEZE_PATH)
+    from src.run_layer3 import marker_identity_sha
+
+    frozen = json.loads(POLICY_FREEZE_PATH.read_text())
     stored = json.loads(TEST_EVAL_PATH.read_text())
-    assert stored["policy_freeze_sha256"] == frozen_sha
-    assert stored["outcome_marker_sha256"] == manifest.file_sha256(config.OUTCOME_MARKER)
-    assert stored["policy"] == json.loads(POLICY_FREEZE_PATH.read_text())["policy"]
+    assert stored["policy_freeze_sha256"] == manifest.file_sha256(POLICY_FREEZE_PATH)
+    assert stored["outcome_marker_sha256"] == marker_identity_sha()
+    assert frozen["outcome_marker_sha256"] == marker_identity_sha()
+    assert stored["policy"] == frozen["policy"]

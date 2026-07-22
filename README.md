@@ -17,9 +17,11 @@
 > 无法证明"。全流程冻结均由内容哈希机器校验,审计发现的每处偏差都记录在 Amendment Log。
 
 **The hero of this repo is not a model leaderboard — it is the decision procedure:**
-no leakage, pre-registered inference, machine-checked freezes, and (because Layers 2–3
-are simulated with a known DGP) proof that the safety procedure makes the *correct
-call* against ground truth.
+unit-tested leakage boundaries (and, where one was breached, disclosure rather than a
+quiet repair), pre-registered inference, freezes enforced by content hash, and —
+because Layers 2–3 are simulated with a known DGP — a *graded* check that the safety
+procedure reached the correct call on this design. One correct call is evidence the
+procedure works here, not proof that it always will.
 
 ---
 

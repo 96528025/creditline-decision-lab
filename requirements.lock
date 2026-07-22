@@ -12,7 +12,6 @@ cycler==0.12.1
 debugpy==1.8.21
 decorator==5.3.1
 defusedxml==0.7.1
-econml==0.16.0
 executing==2.2.1
 fastjsonschema==2.21.2
 fonttools==4.63.0

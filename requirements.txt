@@ -6,8 +6,9 @@ lightgbm>=4.3          # chosen GBDT: native NaN handling + first-class monotone
 statsmodels>=0.14
 scipy>=1.13
 shap>=0.46
-econml>=0.15           # Layer 3 meta-learners (T-/X-learner)
 matplotlib>=3.8
+# NOTE: no econml — the T-/X-learners are hand-rolled on LightGBM (src/cate.py),
+# which keeps the meta-learner algebra visible and the dependency surface small.
 
 # Data access & notebooks tooling
 kagglehub>=0.3

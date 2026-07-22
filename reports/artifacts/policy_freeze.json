@@ -21,7 +21,7 @@
     }
   },
   "candidate_table_sha256": "7c4d01bf70e72c2cc1eea4b83e75ff312d3d54296f4d6b0e2674aee87d9afbe3",
-  "outcome_marker_sha256": "b3419f4aadf1e0de9aca695bd85e1e57f1cadcd54d8d17f75cb8443e53f69775",
+  "outcome_marker_sha256": "fad2c01f8b7ef06e8f967192fe00e4dcb5ad1629b8c56e1b55f8fd7ca550b0a1",
   "linkage_manifest_sha256": "30360ece731b0ac2ad1c1996cfd51f26ed7d9552173944de80265b439a77e7ae",
   "train_ids_sha256": "712ff5131c000e33fc692eed8bb9bb0ff21a5f88249adbb15307d2b8d0f31aa7",
   "val_ids_sha256": "4272fdb9e81c59b34f53a09d7cf3d05bf7f8ce4453e618532ec89af5db86f56a",
@@ -44,6 +44,7 @@
   },
   "frozen_on": "2026-07-21",
   "amendments": [
-    "2026-07-21: migrated to executable freeze v2 (audit P1): persisted X-learner boosters + content hashes, loadable spec (finite-constraints encoding), input-state and candidate-table hashes, selection and test decision rules. Model identity with the v1 in-memory models proven by byte-identical candidate-table reproduction; TEST outcomes NOT re-evaluated (targeting counts verified from covariates + assignment only)."
+    "2026-07-21: migrated to executable freeze v2 (audit P1): persisted X-learner boosters + content hashes, loadable spec (finite-constraints encoding), input-state and candidate-table hashes, selection and test decision rules. Model identity with the v1 in-memory models proven by byte-identical candidate-table reproduction; TEST outcomes NOT re-evaluated (targeting counts verified from covariates + assignment only).",
+    "2026-07-21: outcome_marker_sha256 switched to the marker IDENTITY hash (marker minus Layer-3 back-references) so the marker can anchor the POLICY-TEST result hash without circularity. No policy, spec, model, or result changed."
   ]
 }

@@ -35,8 +35,10 @@ means more spending **and** more default risk?
   have been **too small to prove safety either way** — we say so plainly rather than
   claim comfort we cannot support. Proving safety at 0.30 would need roughly four
   times the sample.
-- Because the test was simulated, we could check our procedure against the known
-  truth: **every safety call the process made was correct.**
+- Because the test was simulated, we could grade the procedure against the known
+  answer: **on this test, both safety calls it made — the portfolio-wide one and the
+  one for the chosen policy — matched the truth.** That is a check on one design, not
+  a guarantee about how the method behaves in general.
 
 ## Who should get the increase
 
@@ -44,17 +46,23 @@ Targeting models identify who spends more when given credit; they are **not reli
 enough to predict each individual's default reaction, and we do not use them that
 way** — safety is enforced at the portfolio level by the experiment itself. The best
 policy found is **broad coverage**: offer the increase to ~98% of eligible customers,
-trimming only the riskiest edge, where the spend benefit is smallest anyway (about
-$35 per customer in the safest fifth versus $12 in the riskiest). Fancier targeting
-beat "offer to all eligibles" by only about $0.41 per customer — within measurement
-noise — so we recommend the simple, defensible version.
+trimming only the riskiest edge, where the *estimated* spend benefit is smallest
+anyway (roughly $35 per customer in the safest fifth versus $12 in the riskiest —
+model estimates, not separately measured). Fancier targeting beat "offer to all
+eligibles" by only about $0.41 per customer, which is well inside the margin of
+error: we did **not** show that selective targeting is better than simply offering to
+everyone eligible, so we recommend the simple, defensible version. The final test
+result confirms the chosen policy beats *doing nothing*; it was not designed to rank
+it against "offer to all."
 
 ## Recommendation
 
-**Proceed with credit-line increases for the eligible population under the 0.50pp
-risk guardrail**, monitored the same way it was tested: keep a randomized holdout and
-track the portfolio-level default gap against tolerance. Do not adopt a tighter
-0.30pp tolerance without a substantially larger test.
+Within this simulated exercise, the process yields: **proceed with credit-line
+increases for the eligible population under the 0.50pp risk guardrail**, monitored
+the same way it was tested — keep a randomized holdout and track the portfolio-level
+default gap against tolerance. Do not adopt a tighter 0.30pp tolerance without a
+substantially larger test. Any real decision would need this run on real experimental
+data, plus the governance work listed in the README.
 
 ## Caveats in one breath
 

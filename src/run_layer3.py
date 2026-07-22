@@ -51,6 +51,35 @@ def _ids_sha(index) -> str:
         np.sort(np.asarray(index, dtype=np.int64)).tobytes()).hexdigest()
 
 
+LAYER3_MARKER_KEYS = ("policy_test_result_sha256",)
+
+
+def marker_identity_sha() -> str:
+    """Hash of the experiment-outcome marker EXCLUDING Layer-3 back-references.
+
+    The marker anchors the POLICY-TEST result hash, while the TEST result
+    records the marker hash — hashing the whole file in both directions would
+    be circular (writing either one would invalidate the other). Excluding the
+    Layer-3 keys keeps the *experiment identity* — seed, outcome/truth/cate
+    hashes, design hash — stable and verifiable in both directions.
+    """
+    m = json.loads(config.OUTCOME_MARKER.read_text())
+    payload = {k: v for k, v in m.items() if k not in LAYER3_MARKER_KEYS}
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True).encode()).hexdigest()
+
+
+def result_payload_sha(result: dict) -> str:
+    """Content hash of the POLICY-TEST evaluation ITSELF (every number in it),
+    excluding the self-referential hash field. Binding the result to the
+    freeze/marker/id hashes proves it was produced under the right conditions;
+    only this proves the numbers were not edited afterwards. The value is
+    mirrored into the outcome marker, so the check has an external anchor."""
+    payload = {k: v for k, v in result.items() if k != "result_sha256"}
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, default=float).encode()).hexdigest()
+
+
 def build_features(cohort: pd.DataFrame, outcomes: pd.DataFrame) -> pd.DataFrame:
     """Pre-treatment features only: cleaned covariates + calibrated OOF PD +
     simulated pre-period spend. Post-treatment variables never enter."""
@@ -61,7 +90,7 @@ def build_features(cohort: pd.DataFrame, outcomes: pd.DataFrame) -> pd.DataFrame
 
 def current_env_state(feat, idx_tr, idx_va, idx_te) -> dict:
     return {
-        "outcome_marker_sha256": manifest.file_sha256(config.OUTCOME_MARKER),
+        "outcome_marker_sha256": marker_identity_sha(),
         "linkage_manifest_sha256": manifest.file_sha256(manifest.MANIFEST_PATH),
         "train_ids_sha256": _ids_sha(feat.index[idx_tr]),
         "val_ids_sha256": _ids_sha(feat.index[idx_va]),
@@ -159,8 +188,14 @@ def main() -> None:
         pv["feasible"] = policy.feasible(pv, delta_pp)
         rows.append(pv)
     cand = pd.DataFrame(rows).set_index("policy")
-    cand.to_csv(_art("policy_candidates_val.csv"))
-    cand_sha = manifest.file_sha256(_art("policy_candidates_val.csv"))
+    # Hash IN MEMORY and verify BEFORE writing: writing first would destroy the
+    # frozen-run artifact whenever a rerun disagrees with it, leaving the error
+    # message as the only surviving evidence. The file is (re)written only when
+    # no freeze exists yet, or when the bytes are provably identical.
+    cand_sha = policy.write_artifact_verified(
+        _art("policy_candidates_val.csv"), cand.to_csv().encode(),
+        None if frozen is None else frozen["candidate_table_sha256"],
+        "POLICY-VAL candidate table")
     print(cand[["share_targeted", "inc_spend_per_eligible",
                 "inc_default_pp_per_eligible", "inc_default_pp_upper_bound",
                 "feasible"]].round(4).to_string())
@@ -213,8 +248,10 @@ def main() -> None:
 
     # ---- ONE-SHOT POLICY-TEST evaluation (verify-and-read afterwards)
     freeze_sha = manifest.file_sha256(POLICY_FREEZE_PATH)
+    marker = json.loads(config.OUTCOME_MARKER.read_text())
     if TEST_EVAL_PATH.exists():
         test_result = json.loads(TEST_EVAL_PATH.read_text())
+        # conditions it was produced under ...
         policy.assert_frozen(policy.freeze_problems(
             {"policy_freeze_sha256": test_result.get("policy_freeze_sha256"),
              "test_ids_sha256": test_result.get("test_ids_sha256"),
@@ -223,8 +260,15 @@ def main() -> None:
              "test_ids_sha256": env["test_ids_sha256"],
              "outcome_marker_sha256": env["outcome_marker_sha256"]}),
             "stored POLICY-TEST evaluation")
-        print("POLICY-TEST already evaluated once — verified and read back "
-              "(no re-prediction, no outcome recomputation)")
+        # ... AND the result content itself, anchored in the outcome marker
+        policy.assert_frozen(policy.freeze_problems(
+            {"result_sha256": marker.get("policy_test_result_sha256"),
+             "self_recorded_sha256": test_result.get("result_sha256")},
+            {"result_sha256": result_payload_sha(test_result),
+             "self_recorded_sha256": result_payload_sha(test_result)}),
+            "POLICY-TEST result content")
+        print("POLICY-TEST already evaluated once — result content and "
+              "conditions verified, read back (no re-prediction)")
     else:
         tau_s_te, tau_d_te = tau("spend", idx_te), tau("default", idx_te)
         spec = policy.spec_from_json(frozen["spec"])
@@ -255,8 +299,12 @@ def main() -> None:
             },
             "evaluated_on": str(date.today()),
         }
+        test_result["result_sha256"] = result_payload_sha(test_result)
         TEST_EVAL_PATH.write_text(json.dumps(test_result, indent=2, default=float))
-        print("POLICY-TEST evaluated (once)")
+        marker["policy_test_result_sha256"] = test_result["result_sha256"]
+        config.OUTCOME_MARKER.write_text(json.dumps(marker, indent=2))
+        print("POLICY-TEST evaluated (once); result content hash anchored "
+              "in the outcome marker")
     print(json.dumps(test_result["policy_value_test"], indent=2)[:600])
     print(json.dumps(test_result["truth_validation"], indent=2))
 

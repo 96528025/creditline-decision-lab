@@ -138,6 +138,28 @@ def freeze_problems(frozen: dict, current: dict) -> list[str]:
     return problems
 
 
+def write_artifact_verified(path, content: bytes, expected_sha: str | None,
+                            what: str) -> str:
+    """Hash → verify → (only then) write. Returns the content hash.
+
+    Ordering is the whole point: writing before comparing would destroy the
+    frozen-run artifact on any disagreeing rerun, leaving the error message as
+    the only surviving evidence of what the frozen state used to be. On
+    mismatch this raises with the file on disk untouched.
+    """
+    import hashlib
+
+    sha = hashlib.sha256(content).hexdigest()
+    if expected_sha is not None and sha != expected_sha:
+        raise RuntimeError(
+            f"{what} no longer reproduces the frozen artifact (frozen "
+            f"{expected_sha[:12]}…, current {sha[:12]}…). The on-disk file was "
+            "NOT overwritten; investigate before doing anything else.")
+    if not path.exists() or path.read_bytes() != content:
+        path.write_bytes(content)
+    return sha
+
+
 def assert_frozen(problems: list[str], context: str) -> None:
     if problems:
         raise RuntimeError(

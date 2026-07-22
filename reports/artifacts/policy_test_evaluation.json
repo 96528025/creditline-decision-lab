@@ -23,10 +23,12 @@
     "guardrail_decision_correct": true
   },
   "evaluated_on": "2026-07-21",
-  "policy_freeze_sha256": "a1320cd402a1050422246b06c871c9e2dde3cb9a6c1bdace7684311b30cb6118",
+  "policy_freeze_sha256": "7edc98aed449ddbdbacc485a414d0b9d87a2662f51fbe33c3f18bb2a26be21dd",
   "test_ids_sha256": "53b16040e76652f2898106209061f5b9d15b323de522e3e699a5f77b3e1997e7",
-  "outcome_marker_sha256": "b3419f4aadf1e0de9aca695bd85e1e57f1cadcd54d8d17f75cb8443e53f69775",
+  "outcome_marker_sha256": "fad2c01f8b7ef06e8f967192fe00e4dcb5ad1629b8c56e1b55f8fd7ca550b0a1",
   "amendments": [
-    "2026-07-21: hash bindings added during freeze-v2 migration; all evaluation numbers unchanged, no re-prediction or outcome recomputation."
-  ]
+    "2026-07-21: hash bindings added during freeze-v2 migration; all evaluation numbers unchanged, no re-prediction or outcome recomputation.",
+    "2026-07-21: added result_sha256 covering this artifact's own content (audit P1: the evaluation numbers themselves were unprotected); freeze/marker references updated to the identity-hash scheme. All evaluation numbers unchanged; POLICY-TEST not re-evaluated."
+  ],
+  "result_sha256": "2064a666960bc2e2d95c13c33aa47ac0b08c03b55117fea0617abcf9c99cd32a"
 }
