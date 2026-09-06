@@ -177,5 +177,5 @@ outcome windows · cost-based policy optimization with dollar-valued default los
 
 ---
 
-*Built as a portfolio project targeting consumer-credit data science. Executive
-summary for non-technical readers: [reports/executive_summary.md](reports/executive_summary.md).*
+*Executive summary for non-technical readers:
+[reports/executive_summary.md](reports/executive_summary.md).*
