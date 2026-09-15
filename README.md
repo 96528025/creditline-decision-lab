@@ -1,27 +1,18 @@
 # CreditLine Decision Lab
 
-> **EN** — One auditable business decision: should we offer credit-line increases, to
-> whom, and is the expected spend worth the added default risk? Three genuinely
-> connected layers — a default-risk model (WOE scorecard vs monotonic LightGBM), a
-> clearly-labeled **simulated** randomized credit-line experiment (spend superiority +
-> default non-inferiority), and a policy-level causal targeting decision. The result:
-> ship broadly at the pre-registered 0.50pp risk tolerance (non-inferiority
-> demonstrated), while at 0.30pp the honest answer is "this design cannot demonstrate
-> it." Every freeze in the pipeline is machine-verified by content hash, and every
-> deviation found in audit is disclosed in an amendment log.
->
-> **中文** — 一个可审计的业务决策:是否提额、给谁提额、增量消费是否值得增量违约风险。
-> 三层连贯:违约风险模型(WOE 评分卡 vs 单调 LightGBM)→ 明确标注为**模拟**的随机化
-> 提额实验(消费 superiority + 违约 non-inferiority)→ policy 层因果定向决策。结论:在
-> 预注册的 0.50pp 风险容忍度下证明非劣、建议广覆盖发放;在 0.30pp 下诚实回答"本设计
-> 无法证明"。全流程冻结均由内容哈希机器校验,审计发现的每处偏差都记录在 Amendment Log。
+[![CI](https://github.com/96528025/creditline-decision-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/96528025/creditline-decision-lab/actions/workflows/ci.yml)
 
-**The hero of this repo is not a model leaderboard — it is the decision procedure:**
-unit-tested leakage boundaries (and, where one was breached, disclosure rather than a
-quiet repair), pre-registered inference, freezes enforced by content hash, and —
-because Layers 2–3 are simulated with a known DGP — a *graded* check that the safety
-procedure reached the correct call on this design. One correct call is evidence the
-procedure works here, not proof that it always will.
+**A credit-line-increase decision prototype: a default-risk model on real data, a clearly labelled simulated randomized experiment, and a policy-level targeting decision, with every freeze checked by content hash.** The question it answers: should credit-line increases be offered, to whom, and is the expected extra spend worth the extra default risk?
+
+What the repository shows:
+
+- **Risk modelling on real data.** A WOE + logistic-regression scorecard against a monotonic LightGBM model on the Kaggle "Give Me Some Credit" dataset, with nested cross-validation, calibration, and unit-tested leakage boundaries.
+- **Pre-registered inference on a simulated experiment.** Layers 2 and 3 use real covariates with simulated treatment and outcomes from a frozen, disclosed data-generating process, so the safety procedure can be graded against known truth. The guardrail reached the correct call on this design; that is evidence the procedure works here, not proof that it always will.
+- **Disclosure over quiet repair.** Where a leakage boundary was breached, the amendment log in [DESIGN_FREEZE.md](DESIGN_FREEZE.md) records it, and hash-bound freezes refuse silent regeneration.
+
+There is no hosted demo. The committed files under `reports/artifacts/` and `reports/figures/` are the results of record, and [reports/executive_summary.md](reports/executive_summary.md) is the non-technical summary.
+
+**Run it:** install `requirements.txt` into a Python 3.13 virtual environment and run `python -m pytest -q`. The suite runs without the Kaggle file; tests that need `data/raw/cs-training.csv` skip until it is in place. The full pipeline, stage by stage, is under [Reproduce](#reproduce).
 
 ---
 
@@ -50,7 +41,7 @@ rules, eligibility, δ, decision rules — is in **[DESIGN_FREEZE.md](DESIGN_FRE
 whose amendment log records every deviation discovered in three audit rounds, with
 dates, reasons, and what was (and was not) allowed to change.
 
-## Headline results (all honest, none cherry-picked)
+## Headline results
 
 **Layer 1 — risk (real data).** Nested outer CV on RISK-DEV is the primary evidence;
 RISK-TEST is a reused, disclosed holdout diagnostic.
@@ -142,7 +133,7 @@ Layout: `sql/` warehouse (cleaning views, cohort CTEs, window-function segments)
 ## Limitations (read before quoting any number)
 
 1. **Provenance.** The dataset's institution, geography, sampling frame, and product
-   context are not documented. Nothing here is Capital One data, and no result
+   context are not documented. Nothing here is any real lender's data, and no result
    transfers to any real portfolio or the US credit-card population. This is a
    methodological prototype.
 2. **Layers 2–3 are simulation.** Real covariates, simulated treatment and outcomes.

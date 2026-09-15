@@ -15,7 +15,7 @@
 # (2011), 150,000 labeled rows, target = serious delinquency / financial
 # distress within two years. The originating institution, geography, and
 # sampling frame are **not established** in public documentation. Nothing here
-# is Capital One data, and results are a methodological prototype — see
+# is any real lender's data, and results are a methodological prototype — see
 # `DESIGN_FREEZE.md` §1.
 #
 # **Holdout discipline.** All **target-aware** statistics in this notebook
