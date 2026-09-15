@@ -106,7 +106,7 @@ def freeze(eligible_default_rate: float, n_eligible: int,
         "frozen_on": str(date.today()),
     }
     if DESIGN_PATH.exists():
-        stored = json.loads(DESIGN_PATH.read_text())
+        stored = load_frozen()
         for key in ("planning_control_default_rate", "dgp_params_sha256",
                     "linkage_manifest_sha256", "n_eligible"):
             if stored.get(key) != design[key]:
@@ -130,6 +130,9 @@ def load_frozen() -> dict:
         raise RuntimeError("experiment design not frozen yet — run freeze() "
                            "(via src.run_layer2) before generating outcomes")
     stored = json.loads(DESIGN_PATH.read_text())
+    payload = stored.get("dgp_params")
+    if not isinstance(payload, dict) or not payload or params_sha256(payload) != stored.get("dgp_params_sha256"):
+        raise RuntimeError("frozen design payload does not match its recorded hash")
     if stored["dgp_params_sha256"] != params_sha256():
         raise RuntimeError(
             "DGP parameters in code no longer match the frozen design artifact "

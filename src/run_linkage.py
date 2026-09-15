@@ -55,11 +55,6 @@ def main() -> None:
     oof_path, thr_path, elig_path = _artifact_paths()
     outcomes_frozen = config.OUTCOME_MARKER.exists()
 
-    raw = data_prep.load_raw()
-    dev_idx, _ = make_or_load_split(raw)
-    dev = data_prep.CleaningRules("primary").fit_transform(raw.loc[dev_idx])
-    y_dev, X_dev = dev[config.TARGET], dev.drop(columns=[config.TARGET])
-
     stored = manifest.load()
     existing = [p for p in (oof_path, thr_path, elig_path) if p.exists()]
 
@@ -77,6 +72,11 @@ def main() -> None:
             "Regenerating some artifacts while inheriting others is forbidden; "
             "delete the whole set deliberately, then rerun."
         )
+
+    raw = data_prep.load_raw()
+    dev_idx, _ = make_or_load_split(raw)
+    dev = data_prep.CleaningRules("primary").fit_transform(raw.loc[dev_idx])
+    y_dev, X_dev = dev[config.TARGET], dev.drop(columns=[config.TARGET])
 
     if stored is None and not existing:
         if outcomes_frozen:  # unreachable given the check above, kept explicit

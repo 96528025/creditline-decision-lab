@@ -2,171 +2,122 @@
 
 [![CI](https://github.com/96528025/creditline-decision-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/96528025/creditline-decision-lab/actions/workflows/ci.yml)
 
-**A credit-line-increase decision prototype: a default-risk model on real data, a clearly labelled simulated randomized experiment, and a policy-level targeting decision, with every freeze checked by content hash.** The question it answers: should credit-line increases be offered, to whom, and is the expected extra spend worth the extra default risk?
+**A Python and SQL decision prototype connecting credit-risk modeling, a simulated randomized experiment, and policy targeting.** It asks whether a credit-line increase could raise spending within a predefined default-risk tolerance.
 
-What the repository shows:
+The risk models use 150,000 anonymized records from Kaggle's *Give Me Some Credit*. The experiment uses real covariates with **simulated treatment, spending, and default outcomes**. Its dollar figures and policy decisions describe that simulation, not a real lending program.
 
-- **Risk modelling on real data.** A WOE + logistic-regression scorecard against a monotonic LightGBM model on the Kaggle "Give Me Some Credit" dataset, with nested cross-validation, calibration, and unit-tested leakage boundaries.
-- **Pre-registered inference on a simulated experiment.** Layers 2 and 3 use real covariates with simulated treatment and outcomes from a frozen, disclosed data-generating process, so the safety procedure can be graded against known truth. The guardrail reached the correct call on this design; that is evidence the procedure works here, not proof that it always will.
-- **Disclosure over quiet repair.** Where a leakage boundary was breached, the amendment log in [DESIGN_FREEZE.md](DESIGN_FREEZE.md) records it, and hash-bound freezes refuse silent regeneration.
+[Executive summary](reports/executive_summary.md) · [Recorded results](reports/artifacts) · [Design and amendments](DESIGN_FREEZE.md) · [Reproduce](#reproduce)
 
-There is no hosted demo. The committed files under `reports/artifacts/` and `reports/figures/` are the results of record, and [reports/executive_summary.md](reports/executive_summary.md) is the non-technical summary.
+**Stack:** Python, SQL/SQLite, pandas, scikit-learn, LightGBM, SciPy, statsmodels, SHAP, pytest, and Jupyter.
 
-**Run it:** install `requirements.txt` into a Python 3.13 virtual environment and run `python -m pytest -q`. The suite runs without the Kaggle file; tests that need `data/raw/cs-training.csv` skip until it is in place. The full pipeline, stage by stage, is under [Reproduce](#reproduce).
+## Engineering highlights
 
----
+| Problem | Implemented approach | Evidence |
+| --- | --- | --- |
+| Validation labels can leak into risk scores | Training-only WOE transforms, nested tuning, and calibration entirely within each outer training fold | [`risk_models.py`](src/risk_models.py), [`oof.py`](src/oof.py), label-perturbation tests |
+| Experiment results can influence design choices | Recorded eligibility, planning assumptions, margins, and simulation parameters; hashes bind the retained artifacts | [`manifest.py`](src/manifest.py), [`experiment_design.py`](src/experiment_design.py) |
+| A non-significant default increase does not establish an acceptable risk bound | Separate power analysis and a one-sided Newcombe confidence bound against a specified margin | [`power.py`](src/power.py), [`inference.py`](src/inference.py) |
+| A policy name alone does not preserve the decision | Persisted X-learner models, executable thresholds, candidate-table hashes, and a stored test evaluation | [`cate.py`](src/cate.py), [`run_layer3.py`](src/run_layer3.py), freeze tests |
+| A rerun can overwrite evidence or repeat a held-out evaluation | Refuse missing or inconsistent frozen state before regeneration; verify outcome bytes before policy work | [`test_freeze_entrypoints.py`](tests/test_freeze_entrypoints.py) |
+
+There is no hosted application. The committed tables, model files, notebooks, and figures are the inspectable outputs.
 
 ## Architecture
 
-```
-Kaggle "Give Me Some Credit" (150k, real)          [provenance: undocumented →
-│                                                   methodological prototype only]
-├─ RISK-TEST 20% ──► fixed secondary holdout diagnostic (usage history disclosed)
-└─ RISK-DEV 80%
-   ├─ LAYER 1 · RISK        WOE+LR scorecard vs monotonic LightGBM
-   │                        nested CV = primary generalization evidence
-   ├─ LINKAGE               nested cross-fitted isotonic calibration → OOF PD
-   │                        frozen eligibility E1–E5 → 94,291 eligible (78.6%)
-   │                        linkage_manifest.json: hash-bound cohort freeze
-   ├─ LAYER 2 · EXPERIMENT  [SIMULATION] frozen design + DGP → outcomes ONCE
-   │                        power at anticipated diff · CUPED · Newcombe UB
-   │                        confirmatory on POLICY-TRAIN∪VAL (66k)
-   └─ LAYER 3 · DECISION    X-learner CATEs → candidate policies →
-                            portfolio guardrail on POLICY-VAL →
-                            frozen executable policy → ONE POLICY-TEST eval
+```text
+150,000 Kaggle credit records
+├── RISK-TEST: 30,000 — secondary holdout diagnostic; prior use disclosed
+└── RISK-DEV: 120,000
+    ├── Layer 1: WOE + logistic regression vs monotonic LightGBM
+    │   Five outer folds, inner tuning, nested cross-fitted calibration
+    └── Frozen eligibility: 94,291 records
+        ├── Layer 2: simulated randomized experiment
+        │   Confirmatory analysis on POLICY-TRAIN + POLICY-VAL (66,003)
+        └── Layer 3: T-/X-learner comparison and candidate policies
+            Train / validation / test split: 40% / 30% / 30%
+            Persist policy → evaluate POLICY-TEST once → verify saved result
 ```
 
-The full frozen design — splitting plan, nested cross-fitting rules, data-handling
-rules, eligibility, δ, decision rules — is in **[DESIGN_FREEZE.md](DESIGN_FREEZE.md)**,
-whose amendment log records every deviation discovered in three audit rounds, with
-dates, reasons, and what was (and was not) allowed to change.
+The historical RISK-TEST was touched by early EDA and reused after implementation fixes. Nested outer cross-validation on RISK-DEV is the primary generalization evidence; neither split is described as an independent external validation dataset. The [amendment log](DESIGN_FREEZE.md#amendment-log) preserves this history.
 
-## Headline results
+## Recorded results
 
-**Layer 1 — risk (real data).** Nested outer CV on RISK-DEV is the primary evidence;
-RISK-TEST is a reused, disclosed holdout diagnostic.
+### 1. Risk models — real data
 
-| model | CV AUC (mean±sd) | holdout AUC | PR-AUC | KS | Brier |
-|---|---|---|---|---|---|
-| WOE + LR scorecard | 0.856 ± 0.006 | 0.851 | 0.396 | 0.553 | 0.0496 |
-| monotonic LightGBM | 0.865 ± 0.005 | 0.859 | 0.405 | 0.569 | 0.0488 |
+| Model | Outer-CV ROC-AUC, mean ± SD | Holdout ROC-AUC | Average precision | KS | Brier |
+| --- | --- | --- | --- | --- | --- |
+| WOE + logistic regression | 0.856 ± 0.006 | 0.851 | 0.387 | 0.548 | 0.0499 |
+| Monotonic LightGBM | 0.865 ± 0.005 | 0.859 | 0.405 | 0.569 | 0.0488 |
 
-Sensitivity analyses over all frozen data-handling rules move CV AUC by ≤ 0.0014.
-Both models sit inside the public benchmark band (~0.86–0.87) — nothing "too good."
+Sources: [outer-fold results](reports/artifacts/stability_outer_cv.csv) and [holdout metrics](reports/artifacts/final_test_metrics.json). The artifact's `pr_auc` field is computed with scikit-learn's **average precision**, not trapezoidal integration. Compared with each model's primary sensitivity setting, the largest absolute change in mean CV AUC across the recorded cleaning variants is approximately **0.00119** ([sensitivity table](reports/artifacts/sensitivity_cv.csv)).
 
-**Layer 2 — simulated experiment (66k confirmatory).**
+The LightGBM constraints make predicted risk non-decreasing in capped utilization and the three delinquency inputs, **holding other model inputs fixed**. They do not establish fairness or monotonicity across simultaneous changes in derived flags. SHAP plots are illustrative model explanations.
 
-| quantity | value |
-|---|---|
-| spend lift (CUPED, θ re-bootstrapped) | **+$25.21** [95% boot 23.27, 27.17], −80% variance |
-| ANCOVA + HC3 cross-check | +$25.21 [23.24, 27.18] |
-| default Δ one-sided 95% UB (Newcombe) | **0.316pp** |
-| non-inferiority @ δ=0.50pp (powered) | **DEMONSTRATED → SHIP** |
-| non-inferiority @ 0.30pp (underpowered: needs 128k/arm, has 33k) | **NOT DEMONSTRATED** |
-| truth check (DGP) | true ATE +23.19 (plain CI covers; CUPED CI misses by $0.08 — disclosed ~2σ event); true Δdefault 0.158pp → guardrail decision **correct** |
+### 2. Randomized experiment — simulated outcomes
 
-**Layer 3 — targeting (restrained reading).** Spend CATE recovery is real (X-learner
-rank corr 0.65 vs analytic truth; PEHE ~$10 on a ±$30 effect); **individual default
-CATEs are statistically worthless (rank corr 0.03) — so no per-customer safety claim
-is ever made.** The frozen policy (`τ̂_spend > 0`, 98% coverage) beat treat-all by only
-$0.41/eligible on validation — within noise. The accurate story is a
-**near-broad-coverage policy under a portfolio-level safety constraint**, not a
-personalization win. One-shot POLICY-TEST: **+$26.54/eligible** [19.5, 33.5], default
-UB **0.232pp < 0.50pp**; DGP truth ($23.05, 0.149pp) confirms both the CI coverage and
-the guardrail decision.
+| Measure | Recorded result |
+| --- | --- |
+| CUPED-adjusted spending difference | +$25.21 per eligible customer; 95% bootstrap interval [$23.27, $27.17] |
+| Observed adjustment benefit | About 80% lower outcome variance in this simulation |
+| Default difference, one-sided 95% upper bound | 0.316 percentage points |
+| Specified 0.50-point margin | Non-inferiority demonstrated; planned sample size adequate |
+| Tighter 0.30-point margin | Non-inferiority not demonstrated; planned sample size inadequate |
 
-## Key decisions (the "why" table)
+Sources: [confirmatory results](reports/artifacts/layer2_confirmatory_results.json), [power analysis](reports/artifacts/power_analysis.csv), and [truth validation](reports/artifacts/layer2_truth_validation.json). CUPED re-estimates its adjustment coefficient in each bootstrap replicate, with an ANCOVA/HC3 cross-check. Power uses the anticipated default increase, not a zero-effect assumption.
 
-| decision | why |
-|---|---|
-| **WOE + LR** as baseline | scorecard-style governance: auditable bins (fixed 0/1/2/3+ for counts), a learned bin for missing, IV per feature; the interpretable anchor the challenger must beat |
-| **monotonic** LightGBM | PD must not fall as delinquency/utilization rises: robustness in sparse regions, business trust, and a *testable* validation property; governance-aware, never "regulator-accepted" |
-| **KS** alongside AUC | the classic credit acceptance metric: max separation of good/bad score distributions; PR-AUC because 6.7% positives make ROC alone flattering |
-| **nested** cross-fitted calibration | a calibrator fit on other folds' OOF scores is subtly leaky (those scores come from models that saw the target fold); isotonic chosen: nonparametric, order-preserving (ties disclosed) |
-| **separate power** for spend & default, larger n wins | the guardrail (rare events) usually binds; and power must be computed at the **anticipated** true difference — using δ alone while the DGP anticipates +0.158pp would be self-deception (audit round 2) |
-| **non-inferiority + one-sided bound** | "not significant" ≠ "safe"; the guardrail passes only if the one-sided 95% Newcombe upper bound clears the margin — score-based, not Wald, because events are rare |
-| **bootstrap + winsorize + hurdle** for spend | zero-inflated heavy tails: means converge slowly (bootstrap CI), tails dominate (winsorized sensitivity), and activation vs intensification are different businesses (two-part view) |
-| **CUPED** | pre-period spend is free variance: −80% here, CI width halved; θ re-estimated inside every bootstrap replicate, ANCOVA+HC3 as an independent check |
-| **FDR only for exploratory** | the two co-primary pre-registered decisions use their frozen thresholds; BH applies solely to labeled exploratory segment scans |
-| **policy-level (not per-customer) default safety** | measured: individual default CATEs carry ~zero signal (rank corr 0.03); individual effects construct the policy, the randomized portfolio guardrail validates safety |
-| **policy value, not Qini** for spend | spend is continuous; cumulative-gain / policy-value curves benchmarked against random targeting; binary Qini would be a category error (acceptable only for default) |
-| **hash-bound freezes everywhere** | "frozen" is a machine-checked invariant (linkage manifest, outcome marker, executable policy freeze with persisted models), not a promise in prose |
+The simulation's true expected spending effect is $23.19. **The CUPED interval misses it by about $0.08; the unadjusted interval covers it.** The default guardrail decision agrees with the known truth for this design. These are results from one simulation, not a general coverage or safety guarantee.
+
+### 3. Targeting — simulated policy evaluation
+
+The X-learner's spending-effect ranking correlates **0.65** with analytic truth; its default-effect ranking correlates only **0.03**. Individual default estimates do not support per-customer safety claims.
+
+The selected policy targets about **98%** of eligible records. It exceeds treat-all by only **$0.41 per eligible customer on validation**, insufficient evidence for a personalization advantage. On the recorded policy test split it estimates **+$26.54 per eligible customer** [95% interval $19.54–$33.55], with a default upper bound of **0.232 percentage points** against the 0.50-point margin. That test comparison is against **no intervention**, not against treat-all.
+
+Sources: [CATE validation](reports/artifacts/cate_validation.json), [candidate comparison](reports/artifacts/policy_candidates_val.csv), and [stored test evaluation](reports/artifacts/policy_test_evaluation.json).
 
 ## Reproduce
 
+### Inspect and test the recorded run
+
+Use Python 3.13. No credentials or raw dataset are needed for the default artifact and synthetic-data checks:
+
 ```bash
-python3.13 -m venv .venv && .venv/bin/pip install -r requirements.txt
-# exact environment for the committed results: requirements.lock (pip freeze)
-# put cs-training.csv in data/raw/  (see data/download.md)
-.venv/bin/python -m src.load_db        # SQLite warehouse + dev-only SQL views
-.venv/bin/python -m src.run_layer1     # risk models: nested CV + holdout diagnostic
-.venv/bin/python -m src.run_linkage    # calibrated OOF + frozen eligibility (manifest)
-.venv/bin/python -m src.run_layer2     # frozen design → power → outcomes ONCE → inference
-.venv/bin/python -m src.run_layer3     # CATEs → frozen policy → one-shot POLICY-TEST
-.venv/bin/python -m pytest -q          # 66 fast tests; 15 skip until cs-training.csv is in place
-.venv/bin/python -m pytest -m slow -q  # full-data artifact-reproducibility test
-# notebooks: jupytext --to notebook --execute notebooks/0*.py
+python3.13 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python -m pytest -q -rs
 ```
 
-All seeds are frozen in `src/config.py`. Re-running any stage against existing
-artifacts verifies hashes and refuses silent regeneration.
+Without `data/raw/cs-training.csv`, 15 data-dependent tests skip; one full-data refitting test is excluded by default. `requirements.lock` is a pinned environment snapshot that includes macOS-specific packages; `requirements.txt` is the portable installation entry point.
 
-Layout: `sql/` warehouse (cleaning views, cohort CTEs, window-function segments) ·
-`src/` pipeline · `notebooks/` 01 EDA, 02 risk, 03 experiment+targeting ·
-`reports/artifacts/` frozen state + results · `reports/figures/` · `tests/`.
+For the data-dependent checks, obtain the file following [data/download.md](data/download.md), then run:
 
-## Tests worth reading
+```bash
+.venv/bin/python -m src.load_db
+.venv/bin/python -m pytest -q -rs
+.venv/bin/python -m pytest -m slow -q
+.venv/bin/python -m src.simulate_experiment
+```
 
-- `test_oof_no_leakage.py` — flip a fold's labels; its OOF scores must be
-  bit-identical (and other folds' must move).
-- `test_woe_leakage.py` — shuffled validation labels cannot move the transform; a
-  zero-inflated regression test that once caught a real bin-collapse bug.
-- `test_monotonic.py` — the constraint holds on synthetic monotone data, probed
-  feature by feature.
-- `test_linkage_manifest.py` / `test_policy_freeze.py` — every tamper vector
-  (swapped scores, thresholds, model files, specs, id sets) must raise.
-- `test_layer2_inference.py` — Newcombe bound vs statsmodels, BH vs scipy, CUPED
-  unbiasedness, power closed forms, analytic CATE vs oracle Monte Carlo.
-- `test_xlearner_recovery.py` — the spec-required recovery of known heterogeneous
-  effects, continuous and rare-binary.
+The database loader builds local SQLite views. The slow test refits an outer-fold **RISK-DEV** model and calibrator to compare with the retained OOF scores; it does not repeat POLICY-TEST. With the committed freeze present, the final command verifies the cohort, design, and outcome hashes without redrawing outcomes.
 
-## Limitations (read before quoting any number)
+### Generate a separate experiment
 
-1. **Provenance.** The dataset's institution, geography, sampling frame, and product
-   context are not documented. Nothing here is any real lender's data, and no result
-   transfers to any real portfolio or the US credit-card population. This is a
-   methodological prototype.
-2. **Layers 2–3 are simulation.** Real covariates, simulated treatment and outcomes.
-   The DGP is frozen and disclosed, including its warts: the additive spend effect
-   activates nearly all inactive treated customers (active rate 85.4% → 99.5% — a
-   strong mechanism, not "3% activation"), and organic activators share a single
-   scalar draw. Spend levels, effect sizes, and the SHIP conclusion are properties of
-   this DGP, not of any market.
-3. **RISK-TEST is not pristine.** Early EDA touched full-population target statistics,
-   and the holdout was re-evaluated once after a bug fix — both disclosed; nested CV
-   is the primary evidence. We chose disclosed imperfection over re-splitting, which
-   would have laundered rather than removed the contamination.
-4. **δ = 0.30pp was underpowered** (needs ~128k/arm at the anticipated difference);
-   non-inferiority there is *not demonstrated* — which is not evidence of harm.
-5. **Individual default CATEs are noise** (rank corr 0.03). Any per-customer
-   "incremental risk" claim from this pipeline would be fiction; only the portfolio
-   guardrail is load-bearing.
-6. **The TEST evaluation compares the frozen policy against no intervention** — it
-   does not establish superiority over treat-all ($0.41/eligible on VAL is within
-   noise).
-7. Real credit-line governance would additionally require stability monitoring,
-   fairness analysis, adverse-action-compliant reason codes, and validated
-   documentation — all explicitly out of scope. SHAP outputs are illustrative, not
-   adverse-action notices.
+For a new experiment, use a separate checkout with an empty `reports/artifacts/` and a separate database. Preserve the recorded run. The generation order is:
 
-## Future work (deliberately cut — scope control is a feature)
+```text
+src.load_db → src.run_layer1 → src.run_linkage → src.run_layer2 → src.run_layer3
+```
 
-CatBoost / additional challengers · causal forests · survival (time-to-default)
-modeling · fairness analysis · deep tabular baselines (disproportionate here given
-dataset size and interpretability goals — not categorically worse) · shorter-horizon
-outcome windows · cost-based policy optimization with dollar-valued default losses.
+Each is a Python module (`python -m <module>`). Layer 1 refuses to refit over downstream frozen state. Linkage and policy reruns verify their bound artifacts; some diagnostic tables and figures are recomputed. Missing freeze markers or a missing already-recorded policy test result require restoration, not automatic regeneration.
 
----
+Hashes check consistency with the retained records. They are **not** an external timestamp, proof of preregistration, an immutable storage system, or a hash of every source file and diagnostic. A deliberately different experiment needs its own design and outputs.
 
-*Executive summary for non-technical readers:
-[reports/executive_summary.md](reports/executive_summary.md).*
+## Scope and limitations
+
+- The dataset's originating institution, geography, and sampling frame are not established here; no result is attributed to a specific lender or population.
+- Experiment treatment and outcomes are simulated. The frozen generator applies additive spending effects to inactive treated customers too, producing an active rate of 85.4% → 99.5%; organic activators also share one scalar draw. These disclosed mechanisms are retained, not silently repaired after seeing results.
+- The 0.50-point tolerance and $12 spending threshold are hypothetical design inputs. No real credit-line amounts, dollar-valued default losses, production lending decisions, or realized revenue are measured.
+- The policy bound is a portfolio-level estimate under the simulated randomized design. Default-effect predictions are not reliable individual risk estimates; validation-based policy selection is assessed separately on the retained test split.
+- There is no fairness validation, production monitoring, lending API, or validated adverse-action explanation system. These are outside the implemented prototype.
+
+Implementation details and historical deviations remain in [DESIGN_FREEZE.md](DESIGN_FREEZE.md); the shorter business explanation is in the [executive summary](reports/executive_summary.md).

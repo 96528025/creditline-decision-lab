@@ -21,6 +21,10 @@ def make_or_load_split(df: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
     if path.exists():
         saved = json.loads(path.read_text())
         return np.array(saved["dev"]), np.array(saved["test"])
+    if (config.OUTCOME_MARKER.exists()
+            or (config.ARTIFACTS_DIR / "linkage_manifest.json").exists()):
+        raise RuntimeError("frozen risk split is missing; restore the original "
+                           "file instead of generating another split")
     dev_idx, test_idx = train_test_split(
         df.index.to_numpy(),
         test_size=config.RISK_TEST_FRACTION,

@@ -6,19 +6,18 @@ decision process; they describe no real portfolio.*
 
 ## The question
 
-Should we offer credit-line increases — and to whom — given that more available credit
-means more spending **and** more default risk?
+Should we offer credit-line increases — and to whom — while weighing potential changes in spending and default risk?
 
 ## What we did
 
 1. **Scored risk.** Built and validated a default-risk model on 150,000 anonymized
    credit records. Two versions agree closely: a bank-style scorecard (easy to audit)
-   and a slightly stronger machine-learning model constrained to always treat more
-   delinquency and higher utilization as riskier.
+   and a slightly stronger machine-learning model whose selected delinquency and
+   utilization inputs cannot lower predicted risk when other inputs stay fixed.
 2. **Defined who is even eligible.** Customers with recent serious delinquency, bad
    data, or the riskiest 20% of scores are excluded up front: 94,291 of 120,000
    (79%) remain. This rule was locked before any experiment ran and cannot be changed
-   after the fact — the pipeline physically refuses.
+   without detection by the recorded cohort checks.
 3. **Ran a (simulated) randomized test** on eligibles, half receiving an increase.
    Before looking at results we committed to the success criteria: spend must rise by
    at least **$12 per customer**, and the default rate may rise by at most **0.50
@@ -28,9 +27,9 @@ means more spending **and** more default risk?
 
 - **Spending rose ~$25 per eligible customer** (95% confidence roughly $23–27) —
   comfortably above the $12 bar.
-- **Default risk stayed inside tolerance.** Our worst-plausible-case estimate of the
-  default increase is **0.32 percentage points, below the 0.50 tolerance** — so the
-  safety bar is met with statistical confidence, not just on average.
+- **Default risk stayed inside tolerance.** The one-sided 95% upper confidence bound on the
+  default increase is **0.32 percentage points, below the 0.50 tolerance**,
+  meeting the specified guardrail under this simulated design.
 - Had risk management demanded a tighter 0.30-point tolerance, this experiment would
   have been **too small to prove safety either way** — we say so plainly rather than
   claim comfort we cannot support. Proving safety at 0.30 would need roughly four
@@ -46,9 +45,9 @@ Targeting models identify who spends more when given credit; they are **not reli
 enough to predict each individual's default reaction, and we do not use them that
 way** — safety is enforced at the portfolio level by the experiment itself. The best
 policy found is **broad coverage**: offer the increase to ~98% of eligible customers,
-trimming only the riskiest edge, where the *estimated* spend benefit is smallest
-anyway (roughly $35 per customer in the safest fifth versus $12 in the riskiest —
-model estimates, not separately measured). Fancier targeting beat "offer to all
+excluding records with a negative estimated spending effect. It is not an
+explicit risk-score cutoff. Predicted spending effects are roughly $35 in the
+safest fifth versus $12 in the riskiest — model estimates, not separately measured. Fancier targeting beat "offer to all
 eligibles" by only about $0.41 per customer, which is well inside the margin of
 error: we did **not** show that selective targeting is better than simply offering to
 everyone eligible, so we recommend the simple, defensible version. The final test

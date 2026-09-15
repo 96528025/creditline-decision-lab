@@ -53,6 +53,9 @@ def compute_cate_truth() -> pd.DataFrame:
                                "hash — refusing to trust or regenerate it silently")
         return pd.read_parquet(CATE_TRUTH_PATH)
 
+    if marker.get("cate_truth_sha256"):
+        raise RuntimeError("frozen cate_truth.parquet is missing; restore it "
+                           "without replacing its recorded hash")
     cohort = load_frozen_cohort()
     outcomes = pd.read_parquet(OUTCOMES_PATH)
     pd_cal = cohort["pd_cal"].to_numpy()
@@ -225,28 +228,38 @@ def generate_outcomes(cohort: pd.DataFrame, design: dict) -> tuple[pd.DataFrame,
     return outcomes, truth
 
 
+def verify_frozen_outcomes() -> None:
+    """Verify recorded inputs and outcomes without drawing or writing data."""
+    marker = json.loads(config.OUTCOME_MARKER.read_text())
+    problems = []
+    checks = [("outcomes_sha256", OUTCOMES_PATH), ("truth_sha256", TRUTH_PATH),
+              ("linkage_manifest_sha256", manifest.MANIFEST_PATH)]
+    if "cate_truth_sha256" in marker:
+        checks.append(("cate_truth_sha256", CATE_TRUTH_PATH))
+    for key, path in checks:
+        if not path.exists():
+            problems.append(f"{path.name} missing")
+        elif _sha(path) != marker.get(key):
+            problems.append(f"{path.name} hash mismatch")
+    if marker.get("design_sha256") != experiment_design.params_sha256():
+        problems.append("DGP params changed after outcome generation")
+    if problems:
+        raise RuntimeError(
+            "outcome freeze broken:\n  " + "\n  ".join(problems) +
+            "\nOutcomes are generated at most once; nothing will be redrawn.")
+
+
 def main() -> None:
     config.ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+    if not config.OUTCOME_MARKER.exists() and any(
+            path.exists() for path in (OUTCOMES_PATH, TRUTH_PATH, CATE_TRUTH_PATH)):
+        raise RuntimeError("existing outcome artifacts have no freeze marker; "
+                           "restore the marker instead of redrawing outcomes")
     cohort = load_frozen_cohort()
     design = experiment_design.load_frozen()
 
     if config.OUTCOME_MARKER.exists():
-        marker = json.loads(config.OUTCOME_MARKER.read_text())
-        problems = []
-        checks = [("outcomes_sha256", OUTCOMES_PATH), ("truth_sha256", TRUTH_PATH)]
-        if "cate_truth_sha256" in marker:
-            checks.append(("cate_truth_sha256", CATE_TRUTH_PATH))
-        for key, path in checks:
-            if not path.exists():
-                problems.append(f"{path.name} missing")
-            elif _sha(path) != marker.get(key):
-                problems.append(f"{path.name} hash mismatch")
-        if marker.get("design_sha256") != experiment_design.params_sha256():
-            problems.append("DGP params changed after outcome generation")
-        if problems:
-            raise RuntimeError(
-                "outcome freeze broken:\n  " + "\n  ".join(problems) +
-                "\nOutcomes are generated at most once; nothing will be redrawn.")
+        verify_frozen_outcomes()
         print("outcomes already frozen and verified — no-op")
         return
 
