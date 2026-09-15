@@ -22,7 +22,7 @@ rows, target = `SeriousDlqin2yrs` (serious delinquency / financial distress with
 years). The originating institution, geography, sampling frame, and product context are
 **not established** in the public documentation. This project therefore:
 
-- never describes the data as Capital One data or as representative of the US
+- never describes the data as any real lender's data or as representative of the US
   credit-card population;
 - treats Layer 1 as a consumer credit-risk **prototype**, and Layers 2–3 as a
   clearly-labeled **simulation** built on these customers' real pre-treatment covariates;
