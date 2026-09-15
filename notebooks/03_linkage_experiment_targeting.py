@@ -122,7 +122,7 @@ display(Image(str(FIG / "layer2_results.png")))
 display(json.loads((ART / "layer2_truth_validation.json").read_text()))
 
 # %% [markdown]
-# Two things worth defending in an interview:
+# Two things worth defending:
 # - The guardrail's decision is **correct against truth** (true Δdefault
 #   0.158pp < 0.50pp; the 0.316pp bound sits above the truth, as a valid
 #   upper bound should).

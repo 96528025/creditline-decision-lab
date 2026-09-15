@@ -112,7 +112,7 @@ python3.13 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m src.run_linkage    # calibrated OOF + frozen eligibility (manifest)
 .venv/bin/python -m src.run_layer2     # frozen design → power → outcomes ONCE → inference
 .venv/bin/python -m src.run_layer3     # CATEs → frozen policy → one-shot POLICY-TEST
-.venv/bin/python -m pytest -q          # 63 fast tests (leakage, freezes, estimators)
+.venv/bin/python -m pytest -q          # 66 fast tests; 15 skip until cs-training.csv is in place
 .venv/bin/python -m pytest -m slow -q  # full-data artifact-reproducibility test
 # notebooks: jupytext --to notebook --execute notebooks/0*.py
 ```
