@@ -9,9 +9,12 @@ from src import config, experiment_design
 from src.simulate_experiment import (assign_splits_and_treatment,
                                      generate_outcomes, load_frozen_cohort)
 
+# load_frozen_cohort() re-verifies the manifest (which hashes the raw CSV) and reloads
+# the raw data, so the frozen artifacts alone are not enough to run these tests.
 pytestmark = pytest.mark.skipif(
-    not (config.ARTIFACTS_DIR / "linkage_manifest.json").exists(),
-    reason="frozen linkage cohort not built",
+    not ((config.ARTIFACTS_DIR / "linkage_manifest.json").exists()
+         and config.DATA_RAW.exists()),
+    reason="frozen linkage cohort not built or raw data not downloaded",
 )
 
 

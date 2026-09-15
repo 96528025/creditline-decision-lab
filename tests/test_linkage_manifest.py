@@ -15,8 +15,14 @@ import pytest
 from src import config, manifest
 
 
+# manifest.build() hashes the raw CSV, and run_linkage.main() loads it before its
+# guards run, so every test here needs the Kaggle download as well as the artifacts.
+needs_raw_data = pytest.mark.skipif(
+    not config.DATA_RAW.exists(), reason="raw data not downloaded"
+)
 needs_artifacts = pytest.mark.skipif(
-    not manifest.MANIFEST_PATH.exists(), reason="linkage manifest not built"
+    not (manifest.MANIFEST_PATH.exists() and config.DATA_RAW.exists()),
+    reason="linkage manifest not built or raw data not downloaded",
 )
 
 
@@ -52,6 +58,7 @@ def test_manifest_detects_each_kind_of_tampering():
         assert any(key in p for p in problems), f"tampering with {key} not detected"
 
 
+@needs_raw_data
 def test_outcome_marker_blocks_fresh_generation(tmp_path, monkeypatch):
     """With the outcome marker present and no manifest, run_linkage must raise
     RuntimeError before touching anything."""
@@ -66,6 +73,7 @@ def test_outcome_marker_blocks_fresh_generation(tmp_path, monkeypatch):
         run_linkage.main()
 
 
+@needs_raw_data
 def test_partial_artifacts_without_manifest_are_refused(tmp_path, monkeypatch):
     from src import run_linkage
 

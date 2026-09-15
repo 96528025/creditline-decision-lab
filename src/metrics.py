@@ -5,8 +5,8 @@ Why these four:
 - PR-AUC: with ~6.7% positives, ROC-AUC can look healthy while precision at
   business-relevant recall is poor; PR-AUC is the imbalance-honest complement.
 - KS statistic: max separation between cumulative score distributions of goods
-  and bads — the classic credit-scoring acceptance metric, and interviewers at
-  banks expect it.
+  and bads — the classic credit-scoring acceptance metric, and the one bank
+  model-risk reviewers expect to see.
 - Calibration (reliability curve + Brier): Layers 2-3 consume the score as a
   PROBABILITY (eligibility tiers, DGP inputs), so rank-ordering alone is not
   enough; predicted PDs must track observed default rates.
