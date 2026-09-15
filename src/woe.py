@@ -6,7 +6,7 @@ WOE maps each bin b of a feature to ln(P(bin b | non-event) / P(bin b | event)).
 Binning + WOE gives logistic regression three properties that matter for a
 governance-friendly scorecard:
 
-- monotone-in-risk encoding per bin, robust to outliers and skew (the extreme
+- per-bin log-odds encoding, without enforcing monotonicity across ordered bins (the extreme
   DebtRatio / utilization tails land in a bin instead of dominating a linear term);
 - a principled slot for MISSING values: they form their own bin, whose WOE is
   learned from training data instead of an arbitrary imputation;

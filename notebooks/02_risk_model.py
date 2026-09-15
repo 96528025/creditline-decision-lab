@@ -86,11 +86,11 @@ display(Image(str(FIG / "roc_test.png")))
 display(Image(str(FIG / "calibration_test.png")))
 
 # %% [markdown]
-# **Leakage / sanity hunt.** Public benchmarks for this dataset put strong
-# models at ROC-AUC ≈ 0.86–0.87 (the 2011 winners were ≈ 0.869 on the private
-# leaderboard). Our test AUC sits inside that band, and CV vs test metrics
-# agree within fold-level noise. Nothing looks "too good" — a test AUC of 0.95
-# here would have meant a leak, not a breakthrough.
+# **Leakage checks and interpretation.** The retained CV and holdout metrics
+# are broadly similar, but agreement alone does not rule out leakage. This
+# local holdout is not the competition's private leaderboard sample. The
+# behavioral tests and the disclosed holdout-use history are the relevant
+# evidence for this implementation.
 #
 # The sanity hunt also runs in the other direction: in the first Layer-1 run,
 # IV(NumberOfTimes90DaysLate) came out at 0.04 — flatly contradicting domain

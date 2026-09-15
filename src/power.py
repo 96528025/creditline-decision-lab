@@ -7,8 +7,8 @@ TWO analyses, larger n wins (both computed from FROZEN planning inputs only):
     spend model — legitimate pre-outcome knowledge, since the DGP spec is
     frozen before any outcome exists (and uses a seed disjoint from the
     outcome seed).
-(b) default-rate non-inferiority at margin δ, one-sided α, assuming equal true
-    rates at the planning baseline. Reported at δ ∈ {0.30, 0.50, 0.75} pp; if
+(b) default-rate non-inferiority at margin δ, one-sided α, using the anticipated true difference
+    and a baseline-rate variance approximation. Reported at δ ∈ {0.30, 0.50, 0.75} pp; if
     the eligible population cannot support a margin, the design is reported
     UNDERPOWERED at that margin — assumptions are never adjusted afterwards.
 

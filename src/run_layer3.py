@@ -26,7 +26,7 @@ from scipy import stats
 from . import config, experiment_design, manifest, policy
 from .cate import TLearner, XLearner, pehe
 from .simulate_experiment import (OUTCOMES_PATH, compute_cate_truth,
-                                  load_frozen_cohort)
+                                  load_frozen_cohort, verify_frozen_outcomes)
 
 POLICY_FREEZE_PATH = config.ARTIFACTS_DIR / "policy_freeze.json"
 TEST_EVAL_PATH = config.ARTIFACTS_DIR / "policy_test_evaluation.json"
@@ -105,7 +105,19 @@ def main() -> None:
     if not config.OUTCOME_MARKER.exists():
         raise RuntimeError("no frozen experiment outcomes — run Layer 2 first")
 
+    marker = json.loads(config.OUTCOME_MARKER.read_text())
+    if not POLICY_FREEZE_PATH.exists() and (
+            TEST_EVAL_PATH.exists() or marker.get("policy_test_result_sha256")
+            or MODELS_DIR.exists()
+            or _art("policy_candidates_val.csv").exists()):
+        raise RuntimeError("frozen policy state is missing; restore the policy "
+                           "freeze before loading data or fitting models")
+    if marker.get("policy_test_result_sha256") and not TEST_EVAL_PATH.exists():
+        raise RuntimeError("frozen policy test result is missing; restore it "
+                           "instead of evaluating POLICY-TEST again")
+
     design = experiment_design.load_frozen()
+    verify_frozen_outcomes()
     p = design["dgp_params"]
     delta_pp = p["delta_noninf_pp"]
     cohort = load_frozen_cohort()

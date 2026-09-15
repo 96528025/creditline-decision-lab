@@ -158,6 +158,14 @@ def shap_analysis(lgbm, X_dev: pd.DataFrame, iv: pd.Series) -> pd.DataFrame:
 
 # ------------------------------------------------------------------- main
 def main() -> None:
+    anchors = [config.ARTIFACTS_DIR / "linkage_manifest.json",
+               config.ARTIFACTS_DIR / "frozen_thresholds.json",
+               config.OUTCOME_MARKER]
+    if any(path.exists() for path in anchors):
+        raise RuntimeError(
+            "Layer 1 cannot refit over frozen downstream inputs. Verify the "
+            "recorded run with the tests; use a separate artifact directory "
+            "for a new experiment. Nothing was overwritten.")
     t0 = time.time()
     raw = data_prep.load_raw()
     dev_idx, test_idx = make_or_load_split(raw)

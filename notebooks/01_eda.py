@@ -14,8 +14,8 @@
 # **Dataset provenance (honesty statement).** Kaggle "Give Me Some Credit"
 # (2011), 150,000 labeled rows, target = serious delinquency / financial
 # distress within two years. The originating institution, geography, and
-# sampling frame are **not established** in public documentation. Nothing here
-# is any real lender's data, and results are a methodological prototype — see
+# sampling frame are **not established** in public documentation. No result is attributed
+# to a specific lender or population; this is a methodological prototype — see
 # `DESIGN_FREEZE.md` §1.
 #
 # **Holdout discipline.** All **target-aware** statistics in this notebook

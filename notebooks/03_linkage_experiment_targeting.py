@@ -108,9 +108,10 @@ display(Image(str(FIG / "layer2_results.png")))
 #   artifact.
 # - **Guardrail:** one-sided 95% Newcombe upper bound = 0.316pp. At the frozen
 #   0.50pp margin non-inferiority is **DEMONSTRATED** (with adequate power);
-#   at 0.30pp it is **NOT DEMONSTRATED** — which, per the power table, is what
-#   an underpowered margin was expected to produce regardless of truth. "Not
-#   demonstrated" is never read as "proven unsafe."
+#   at 0.30pp it is **NOT DEMONSTRATED** because the observed bound crosses
+#   that margin. The power calculation is inadequate at the specified
+#   anticipated effect; power depends on that assumption. Failure to
+#   demonstrate non-inferiority does not establish harm.
 # - Result: **SHIP at the pre-registered 0.50pp margin, while 0.30pp
 #   non-inferiority was not demonstrated under an underpowered
 #   tighter-margin design.**
@@ -124,13 +125,12 @@ display(json.loads((ART / "layer2_truth_validation.json").read_text()))
 # %% [markdown]
 # Two things worth defending:
 # - The guardrail's decision is **correct against truth** (true Δdefault
-#   0.158pp < 0.50pp; the 0.316pp bound sits above the truth, as a valid
-#   upper bound should).
+#   0.158pp < 0.50pp; the 0.316pp bound covers the truth
+#   in this run).
 # - The CUPED CI *misses* the expected ATE (+23.19) by \$0.08 while the plain
-#   CI covers it. Diagnosis: randomization drew a slightly spend-poorer
-#   treated arm; CUPED's correction was the ex-ante right move, and a 95% CI
-#   missing ~5% of the time is what 95% means. We report the miss rather than
-#   choosing the estimator that happened to look better.
+#   CI covers it. A nominal 95% interval need not contain the truth in every
+#   realization; this single run does not measure the procedure's long-run
+#   coverage. Both estimates remain reported under the specified analysis.
 
 # %% [markdown]
 # ## 4. Targeting (Layer 3): individual effects construct the policy;
@@ -146,8 +146,7 @@ display(pd.DataFrame({k: {"pehe": v["pehe"], "rank_corr": v["rank_corr"]}
 
 # %% [markdown]
 # - **Spend:** the X-learner recovers real structure (rank corr 0.65; PEHE
-#   ~\$10 on an effect ranging ±\$30), and clearly beats the T-learner
-#   baseline — the expected regime when effects are smoother than outcomes.
+#   \$10.18), compared with the T-learner's \$35.22 PEHE in this simulation.
 # - **Default: rank corr ≈ 0.03 — individual default CATEs are statistically
 #   worthless here, and we say so.** This is the empirical justification for
 #   the design's central safety choice: no per-customer default guarantee is
@@ -166,13 +165,11 @@ display(Image(str(FIG / "layer3_targeting.png")))
 # winner `tau_spend_positive` targets 98% of eligibles and beats `treat_all`
 # by **\$0.41 per eligible on VAL — far smaller than the estimation
 # uncertainty**. This DGP's spend effect is positive for most eligible
-# customers, so near-broad coverage is genuinely close to optimal, and the
-# honest description of the outcome is a **near-broad-coverage policy under a
-# portfolio-level safety constraint** — not a strong-personalization win. The
-# targeting machinery still earns its keep: the risk-tier gradient is real
-# (τ̂ falls from ~\$35 in the safest quintile to ~\$12 in the riskiest, where
-# coverage drops to 93%), and in a world where τ_default had been larger, this
-# same pipeline is what would have caught it.
+# customers. The result supports a **near-broad-coverage policy under a
+# portfolio-level constraint**, without establishing optimality or a
+# personalization advantage. The reported risk-tier gradient is a model
+# estimate: τ̂ falls from ~\$35 in the safest quintile to ~\$12 in the
+# riskiest, where predicted coverage is about 93%.
 
 # %% [markdown]
 # ### The frozen policy and its single POLICY-TEST evaluation
@@ -200,7 +197,7 @@ display(pd.read_csv(ART / "policy_by_risk_tier.csv", index_col=0))
 # ## 5. Recommendation
 #
 # **Ship the credit-line increase broadly to the eligible population, with
-# the frozen policy's exclusions at the risky margin, under the 0.50pp
+# the frozen rule excluding negative estimated spending effects, under the 0.50pp
 # portfolio guardrail** — and monitor with exactly the machinery used here:
 # a randomized holdout and a portfolio-level non-inferiority bound, not
 # per-customer risk predictions. At a 0.30pp tolerance the honest answer is
@@ -209,5 +206,5 @@ display(pd.read_csv(ART / "policy_by_risk_tier.csv", index_col=0))
 # %% [markdown]
 # ---
 # *Methodological prototype on a public dataset of undocumented provenance;
-# Layers 2–3 are simulation. See README → Limitations before quoting any
+# Layers 2–3 are simulation. See README → Scope and limitations before quoting any
 # number.*
